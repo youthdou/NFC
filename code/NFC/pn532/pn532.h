@@ -18,6 +18,14 @@ struct pn532_cmd_t {
 };
 #pragma pack(pop)
 
+struct pn532_version_t {
+    quint8 ic;              //Version of the IC. For PN532, byte is 0x32
+    quint8 ver;             //Version of the firmware
+    quint8 rev;             //Revision of the firmware
+    //Bit0:ISO/IEC 14443 TYPEA, Bit1: ISO/IEC 14443 TYPEB, Bit2: ISO18092
+    quint8 support;
+};
+
 #if 0
 enum {
     CMD_GET_FIRMWARE_VERSION = 0x02,
@@ -38,6 +46,24 @@ enum {
                 FRAME_CMD_START_CODE_SIZE + FRAME_CMD_LEN_SIZE + \
                 FRAME_CMD_LCS_SIZE + FRAME_CMD_DCS_SIZE + FRAME_CMD_POSTAMBLE_SIZE)
 
+enum {
+    ACK_INITED = 0,
+    ACK_OK = 1,
+    ACK_NACK = 2,
+    ACK_TIMEOUT = 3
+};
+
+enum {
+    RESPONSE_INITED = 0,
+};
+
+enum {
+    ACK_PACKET_PREAMBLE = 0,
+    ACK_PACKET_START_CODE = 1,
+    ACK_PACKET_ACK_CODE = 2,
+    ACK_PACKET_POSTAMBLE = 3
+};
+
 
 class pn532 : public QObject
 {
@@ -48,19 +74,25 @@ public:
 
     bool open_pn532(QString port_name);
     bool pn532_wake_up();
+    bool pn532_get_firmware_version(pn532_version_t &version);
 
 private:
     bool pn532_on;
-    bool response_ok;
-    bool ack_ok;
+
+    quint8 response_status;
+    quint8 ack_status;
+
     QTimer *pn532_timer;
+
     pn532_cmd_t pn532_packet;
+    pn532_ack_t pn532_ack;
 
 private:
     quint8 calc_checksum_lcs(quint8 len);
     quint8 calc_checksum_dcs(quint8 *data, quint8 len);
     qint16 generate_cmd_frame(quint8 *cmd_data, quint8 len);
     bool parse_frame(quint8 data);
+    void parse_ack_frame(quint8 data);
     void init_cmd_packet();
     void show_cmd_packet(quint8 len);
 

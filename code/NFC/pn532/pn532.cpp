@@ -28,6 +28,10 @@ pn532::pn532(QObject *parent) :
     connect(pn532_timer, SIGNAL(timeout()),
             this, SLOT(pn532_serial_timeout()));
 
+    pn532_on = false;
+    response_status = RESPONSE_INITED;
+    ack_status = ACK_INITED;
+
     init_cmd_packet();
 }
 
@@ -74,6 +78,21 @@ qint16 pn532::generate_cmd_frame(quint8 *cmd_data, quint8 len)
     return total_len;
 }
 
+void pn532::parse_ack_frame(quint8 data)
+{
+    static quint8 packet_status = ACK_PACKET_PREAMBLE;
+    static
+    switch(packet_status)
+    {
+        case ACK_PACKET_PREAMBLE:
+            if(data != 0x00)
+                ack_status = ACK_NACK;
+            break;
+        case ACK_PACKET_START_CODE:
+
+    }
+}
+
 
 //#wake up reader
 //send:
@@ -89,8 +108,27 @@ bool pn532::pn532_wake_up()
 #if DEBUG
     show_cmd_packet(len);
 #endif
+    pn532_timer->start(10);
+    while(!ack_status);
+    if(ack_status != ACK_OK)
+    {
+        ack_status = ACK_INITED;
+        return false;
+    }
+    while(!response_status);
+    if()
 
     return true;
+}
+
+bool pn532::pn532_get_firmware_version(pn532_version_t &version)
+{
+    quint16 len;
+    len = generate_cmd_frame((quint8 *)get_fireware_cmd, sizeof(get_fireware_cmd));
+#if DEBUG
+    show_cmd_packet(len);
+#endif
+
 }
 
 void pn532::init_cmd_packet()
@@ -114,5 +152,9 @@ void pn532::show_cmd_packet(quint8 len)
 
 void pn532::pn532_serial_timeout()
 {
-
+    if(ack_ok == ACK_INITED)
+    {
+        ack_ok = ACK_TIMEOUT;
+        return;
+    }
 }
