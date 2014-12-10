@@ -18,7 +18,7 @@ public:
 
 private:
     Ui::MainProcess *ui;
-    pn532 *nfc_module;
+    PN532 *nfc_module;
 };
 
 #endif // MAINPROCESS_H

@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QTimer>
 
+#include "serialport.h"
+
 #pragma pack(push)
 #pragma pack(1)
 struct pn532_cmd_t {
@@ -26,12 +28,10 @@ struct pn532_version_t {
     quint8 support;
 };
 
-#if 0
 enum {
     CMD_GET_FIRMWARE_VERSION = 0x02,
     CMD_WAKE_UP = 0x14,
 };
-#endif
 
 enum {
     FRAME_CMD_PREAMBLE_SIZE =   1,
@@ -46,53 +46,68 @@ enum {
                 FRAME_CMD_START_CODE_SIZE + FRAME_CMD_LEN_SIZE + \
                 FRAME_CMD_LCS_SIZE + FRAME_CMD_DCS_SIZE + FRAME_CMD_POSTAMBLE_SIZE)
 
-enum {
-    ACK_INITED = 0,
-    ACK_OK = 1,
-    ACK_NACK = 2,
-    ACK_TIMEOUT = 3
+enum pn532_status_t{
+    PN532_POWER_DOWN = 0,
+    PN532_CMD = 1,
+    PN532_ACK = 2,
+    PN532_RESPONSE = 3,
+};
+
+enum pn532_response_status_t {
+    PN532_RESPONSE_INIT = 0,
+    PN532_RESPONSE_ERROR = 1,
+    PN532_RESPONSE_OK = 2
 };
 
 enum {
-    RESPONSE_INITED = 0,
+    RESPONSE_PACKET_PREAMBLE = 0,
+    RESPONSE_PACKET_START_CODE = 1,
+    RESPONSE_PACKET_LEN = 2,
+    RESPONSE_PACKET_LCS = 3,
+    RESPONSE_PACKET_TFI = 4,
+    RESPONSE_PACKET_DATA = 5,
+    RESPONSE_PACKET_DCS = 6,
+    RESPONSE_PACKET_POSTAMBLE = 7
 };
 
 enum {
     ACK_PACKET_PREAMBLE = 0,
     ACK_PACKET_START_CODE = 1,
     ACK_PACKET_ACK_CODE = 2,
-    ACK_PACKET_POSTAMBLE = 3
+    ACK_PACKET_POSTAMBLE = 4
 };
 
 
-class pn532 : public QObject
+class PN532 : public QObject
 {
     Q_OBJECT
 public:
-    explicit pn532(QObject *parent = 0);
-    ~pn532();
+    explicit PN532(QObject *parent = 0);
+    ~PN532();
 
-    bool open_pn532(QString port_name);
-    bool pn532_wake_up();
+    bool pn532_open(QString port_name);
     bool pn532_get_firmware_version(pn532_version_t &version);
 
 private:
-    bool pn532_on;
-
-    quint8 response_status;
-    quint8 ack_status;
-
     QTimer *pn532_timer;
+    SerialPort *pn532_port;
 
-    pn532_cmd_t pn532_packet;
-    pn532_ack_t pn532_ack;
+    quint8 packet_repsonse_status;
+    quint8 packet_ack_status;
+
+    pn532_status_t pn532_status;
+    pn532_response_status_t pn532_response_status;
+    pn532_cmd_t pn532_cmd_packet;
+    pn532_cmd_t pn532_response_packet;
+
 
 private:
     quint8 calc_checksum_lcs(quint8 len);
     quint8 calc_checksum_dcs(quint8 *data, quint8 len);
     qint16 generate_cmd_frame(quint8 *cmd_data, quint8 len);
-    bool parse_frame(quint8 data);
-    void parse_ack_frame(quint8 data);
+    bool wake_up();
+    bool parse_response_frame(quint8 data);
+    bool parse_ack_frame(quint8 data);
     void init_cmd_packet();
     void show_cmd_packet(quint8 len);
 

@@ -6,8 +6,8 @@ MainProcess::MainProcess(QWidget *parent) :
     ui(new Ui::MainProcess)
 {
     ui->setupUi(this);
-    nfc_module = new pn532(this);
-    nfc_module->pn532_wake_up();
+    nfc_module = new PN532(this);
+    nfc_module->pn532_open("COM1");
 }
 
 MainProcess::~MainProcess()

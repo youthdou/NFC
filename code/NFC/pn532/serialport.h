@@ -19,6 +19,10 @@ private:
     QSerialPort *sp_fd;
     bool isOpen_flg;
 
+
+signals:
+
+
 };
 
 #endif // SERIALPORT_H
