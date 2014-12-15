@@ -1,6 +1,14 @@
 #include "mainprocess.h"
 #include "ui_mainprocess.h"
 
+#define     DEBUG       1
+#if DEBUG
+#include <stdio.h>
+#define     TRACE(...)      {printf(__VA_ARGS__); fflush(stdout);}
+#else
+#define     TRACE(...)
+#endif
+
 MainProcess::MainProcess(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainProcess)
@@ -68,7 +76,16 @@ void MainProcess::process_nfc_cmd_list_target()
     }
     QByteArray uid;
     if(!nfc_module->pn532_list_passive_target(uid))
+    {
+        nfc_target_list_view->show_uid("No Target");
         return;
+    }
+    TRACE("UID: ");
+	for(quint8 i = 0; i < uid.size(); i++)
+	{
+        TRACE("%02x ", (quint8)uid.at(i));
+	}
+    TRACE("\r\n");
     nfc_target_list_view->show_uid(QString(uid.toHex().toUpper()));
 }
 

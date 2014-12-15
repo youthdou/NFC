@@ -2,13 +2,13 @@
 #define PN532_H
 
 #include <QObject>
-#include <QTimer>
-
+#include <QElapsedTimer>
+#include <QCoreApplication>
 #include "serialport.h"
 
 #pragma pack(push)
 #pragma pack(1)
-struct pn532_cmd_t {
+struct pn532_packet_t {
     quint8 preamble;        //0x00
     quint16 start_code;     //0x00 0xff
     quint8 len;             //TFI and PD0 to PDn
@@ -28,9 +28,11 @@ struct pn532_version_t {
     quint8 support;
 };
 
-enum {
+enum pn532_cmd_t{
     CMD_GET_FIRMWARE_VERSION = 0x02,
     CMD_WAKE_UP = 0x14,
+    CMD_IN_LIST_PASSIVE_TARGET = 0x4a,
+    CMD_IN_DATA_EXCHANGE = 0x40,
 };
 
 enum {
@@ -53,11 +55,6 @@ enum pn532_status_t{
     PN532_RESPONSE = 3,
 };
 
-enum pn532_response_status_t {
-    PN532_RESPONSE_INIT = 0,
-    PN532_RESPONSE_ERROR = 1,
-    PN532_RESPONSE_OK = 2
-};
 
 enum {
     RESPONSE_PACKET_PREAMBLE = 0,
@@ -89,27 +86,30 @@ public:
     bool pn532_close();
     bool pn532_get_firmware_version(pn532_version_t &version);
     bool pn532_list_passive_target(QByteArray &uid);
+    bool pn532_read_data(quint8 block_no, QByteArray &data);
+    bool pn532_write_data(quint8 block_no, QByteArray data);
 
     bool test_parse_function(QByteArray data);
 
+
 private:
-    QTimer *pn532_timer;
     SerialPort *pn532_port;
 
     quint8 packet_repsonse_status;
     quint8 packet_ack_status;
 
     pn532_status_t pn532_status;
-    pn532_response_status_t pn532_response_status;
-    pn532_cmd_t pn532_cmd_packet;
-    pn532_cmd_t pn532_response_packet;
+    pn532_packet_t pn532_cmd_packet;
+    pn532_packet_t pn532_response_packet;
 
 
 private:
     quint8 calc_checksum_lcs(quint8 len);
     quint8 calc_checksum_dcs(quint8 *data, quint8 len);
     qint16 generate_cmd_frame(quint8 *cmd_data, quint8 len);
+
     bool wake_up();
+
     bool parse_response_frame(quint8 data);
     bool parse_ack_frame(quint8 data);
     void init_cmd_packet();
@@ -117,10 +117,9 @@ private:
     void show_cmd_packet(quint8 len);
     void print_response_packet();
 
-signals:
-
-public slots:
-    void pn532_serial_timeout();
+    bool pn532_cmd_process(quint8 *cmd_data, quint16 len);
+    void sleep(quint16 msec);
+    bool pn532_serial_process();
 
 };
 

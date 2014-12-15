@@ -23,11 +23,29 @@ void NFCFirmwareView::show_firmware(quint8 ic, quint8 ver, quint8 rev, quint8 su
     ui->verLineEdit->setText(QString("%1").arg(ver));
     ui->revLineEdit->setText(QString("%1").arg(rev));
     if(support & 0x01)
-        ui->ISO14443A_CheckBox->setTristate(true);
-    if(support & 0x02)
-        ui->ISO14443B_CheckBox->setTristate(true);
-    if(support & 0x04)
-        ui->ISO18092_CheckBox->setTristate(true);
+	{
+        ui->ISO14443A_CheckBox->setChecked(true);
+	}
+	else
+	{
+		ui->ISO14443A_CheckBox->setChecked(false);
+	}
+	if(support & 0x02)
+	{
+		ui->ISO14443B_CheckBox->setChecked(true);
+	}
+	else
+	{
+		ui->ISO14443B_CheckBox->setChecked(false);
+	}
+	if(support & 0x04)
+	{
+        ui->ISO18092_CheckBox->setChecked(true);
+	}
+	else
+	{
+		ui->ISO18092_CheckBox->setChecked(false);
+	}
 }
 
 void NFCFirmwareView::on_getFirmwareBtn_clicked()
