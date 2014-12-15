@@ -86,7 +86,11 @@ public:
     ~PN532();
 
     bool pn532_open(QString port_name);
+    bool pn532_close();
     bool pn532_get_firmware_version(pn532_version_t &version);
+    bool pn532_list_passive_target(QByteArray &uid);
+
+    bool test_parse_function(QByteArray data);
 
 private:
     QTimer *pn532_timer;
@@ -109,7 +113,9 @@ private:
     bool parse_response_frame(quint8 data);
     bool parse_ack_frame(quint8 data);
     void init_cmd_packet();
+
     void show_cmd_packet(quint8 len);
+    void print_response_packet();
 
 signals:
 
@@ -117,5 +123,7 @@ public slots:
     void pn532_serial_timeout();
 
 };
+
+
 
 #endif // PN532_H

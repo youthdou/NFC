@@ -24,3 +24,5 @@ FORMS    += mainprocess.ui
 message(Qt version: $$[QT_VERSION])
 
 include(./pn532/pn532.pri)
+include(./general_view/general_view.pri)
+include(./view/view.pri)
